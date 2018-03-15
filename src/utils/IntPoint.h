@@ -68,6 +68,16 @@ template<typename T> INLINE Point& operator /= (Point& p0, const T i) { p0.X /= 
 //INLINE bool operator==(const Point& p0, const Point& p1) { return p0.X==p1.X&&p0.Y==p1.Y; }
 //INLINE bool operator!=(const Point& p0, const Point& p1) { return p0.X!=p1.X||p0.Y!=p1.Y; }
 
+INLINE coord_t getCoord(const Point& p, unsigned char dim)
+{
+    switch (dim)
+    {
+        case 0: return p.X;
+        default:
+        case 1: return p.Y;
+    }
+}
+
 INLINE coord_t vSize2(const Point& p0)
 {
     return p0.X*p0.X+p0.Y*p0.Y;
