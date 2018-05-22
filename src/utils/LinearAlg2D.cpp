@@ -146,4 +146,9 @@ bool LinearAlg2D::lineSegmentsCollide(Point a_from_transformed, Point a_to_trans
     return false;
 }
 
+coord_t LinearAlg2D::getTriangleArea(Point a, Point b)
+{
+    return std::abs(a.X * b.Y - a.Y * b.X) / 2;
+}
+
 } // namespace cura
