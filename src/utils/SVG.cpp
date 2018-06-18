@@ -24,7 +24,8 @@ std::string SVG::toString(Color color)
 
 
 SVG::SVG(const char* filename, AABB aabb, Point canvas_size)
-: aabb(aabb)
+: filename(filename)
+, aabb(aabb)
 , aabb_size(aabb.max - aabb.min)
 , border(canvas_size.X / 5, canvas_size.Y / 10)
 , canvas_size(canvas_size)
@@ -55,6 +56,7 @@ SVG::~SVG()
         fprintf(out, "</body></html>");
     }
     fclose(out);
+    logAlways("Written SVG output to '%s'.\n", filename);
 }
 
 double SVG::getScale() const

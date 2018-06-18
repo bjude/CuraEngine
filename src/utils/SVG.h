@@ -34,6 +34,7 @@ private:
     std::string toString(Color color);
 
     FILE* out; // the output file
+    const char* filename;
     const AABB aabb; // the boundary box to display
     const Point aabb_size;
     const Point border;
