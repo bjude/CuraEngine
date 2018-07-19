@@ -34,7 +34,7 @@ private:
     std::string toString(Color color);
 
     FILE* out; // the output file
-    const char* filename;
+    char filename[1024];
     const AABB aabb; // the boundary box to display
     const Point aabb_size;
     const Point border;
@@ -44,7 +44,7 @@ private:
     bool output_is_html;
 
 public:
-    SVG(const char* filename, AABB aabb, Point canvas_size = Point(1024, 1024));
+    SVG(const std::string filename, AABB aabb, Point canvas_size = Point(1024, 1024));
 
     ~SVG();
 
