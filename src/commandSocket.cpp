@@ -682,7 +682,6 @@ void CommandSocket::sendLayerData()
     {
         for (std::pair<const int, std::shared_ptr<cura::proto::Layer>> entry : data.slice_data) //Note: This is in no particular order!
         {
-            logDebug("Sending layer data for layer %i of %i.\n", entry.first, data.slice_data.size());
             private_data->socket->sendMessage(entry.second); //Send the actual layers.
         }
         data.sliced_objects = 0;
@@ -708,7 +707,6 @@ void CommandSocket::sendOptimizedLayerData()
     {
         for (std::pair<const int, std::shared_ptr<cura::proto::LayerOptimized>> entry : data.slice_data) //Note: This is in no particular order!
         {
-            logDebug("Sending layer data for layer %i of %i.\n", entry.first, data.slice_data.size());
             private_data->socket->sendMessage(entry.second); //Send the actual layers.
         }
         data.sliced_objects = 0;
