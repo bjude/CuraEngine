@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <errno.h>
 #include <signal.h>
 #if defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
 #include <sys/resource.h>
@@ -241,7 +242,7 @@ void slice(int argc, char **argv)
                         }
                         if (!loadMeshIntoMeshGroup(meshgroup, argv[argn], transformation, last_extruder_train))
                         {
-                            logError("Failed to load model: %s\n", argv[argn]);
+                            logError("Failed to load model: '%s'. (error number %d)\n", argv[argn], errno);
                             std::exit(1);
                         }
                         else 
@@ -253,7 +254,7 @@ void slice(int argc, char **argv)
                         argn++;
                         if (!FffProcessor::getInstance()->setTargetFile(argv[argn]))
                         {
-                            cura::logError("Failed to open %s for output.\n", argv[argn]);
+                            cura::logError("Failed to open '%s' for output. (error number %d)\n", argv[argn], errno);
                             exit(1);
                         }
                         break;
