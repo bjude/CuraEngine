@@ -719,7 +719,7 @@ void FffPolygonGenerator::processDerivedWallsSkinInfill(SliceMeshStorage& mesh)
                 {
                     logError("Cannot find density image \'%s\'.", cross_subdisivion_spec_image_file.c_str());
                 }
-                mesh.cross_fill_provider = new SierpinskiFillProvider(mesh.bounding_box, mesh.getSettingInMicrons("infill_line_distance"), mesh.getSettingInMicrons("infill_line_width"));
+                mesh.cross_fill_provider = new SierpinskiFillProvider(mesh.bounding_box, mesh.getSettingInMicrons("infill_line_distance"), mesh.getSettingInMicrons("infill_line_width"), mesh.getSettingInPercentage("cross_infill_dithering_density"));
             }
         }
 
