@@ -273,6 +273,11 @@ namespace Tree
 
 struct TreeParams
 {
+    coord_t branch_radius;
+    coord_t radius_sample_resolution;
+    coord_t layer_height;
+    coord_t xy_distance;
+    coord_t max_move;
 };
 
 Polygons calculate_machine_border(const SliceDataStorage& storage, const TreeParams& params);
