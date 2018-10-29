@@ -278,6 +278,7 @@ struct TreeParams
     coord_t layer_height;
     coord_t xy_distance;
     coord_t max_move;
+    coord_t radius_increment;
 };
 
 Polygons calculate_machine_border(const SliceDataStorage& storage, const TreeParams& params);
@@ -322,8 +323,10 @@ public:
     Node& operator=(const Node&) = delete;
 
     const Point& position() const { return position_; }
+    const coord_t& radius() const { return radius_; }
     const int& layer() const { return layer_; }
     const std::vector<std::unique_ptr<Node>>& children() const { return children_; }
+    void parent(Node* parent) { parent_ = parent; }
 
 private:
     Point position_{0, 0};
@@ -343,7 +346,7 @@ public:
 
 private:
     void combineClose() const;
-    void dropNodes() const;
+    void dropNodes();
     NodePtrVec generateContactPoints(const SliceDataStorage& mesh) const;
     void processLayer(int layer) const;
     void drawCircles(SliceDataStorage& storage) const;
