@@ -749,5 +749,25 @@ const Polygons& ModelVolumes::internal_model(coord_t radius, int layer) const
     }
 }
 
+Node::Node(const Point& pos, coord_t radius, int layer, std::vector<std::unique_ptr<Node>> children, Node* parent) :
+    position_{pos}, radius_{radius}, layer_{layer}, children_{std::move(children)}, parent_{parent}
+{
+}
+
+void Node::merge(std::unique_ptr<Node> other)
+{
+    assert(layer_ == other->layer);
+    radius_ = std::max(radius_, other->radius_);
+    std::move(other->children_.begin(), other->children_.end(), std::back_inserter(children_));
+}
+
+void Node::merge(std::vector<std::unique_ptr<Node>> others)
+{
+    for (auto& ptr : others)
+    {
+        merge(std::move(ptr));
+    }
+}
+
 }
 }
