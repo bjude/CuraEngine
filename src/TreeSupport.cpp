@@ -769,5 +769,30 @@ void Node::merge(std::vector<std::unique_ptr<Node>> others)
     }
 }
 
+void TreeSupport::generateSupportAreas(SliceDataStorage& storage)
+{
+    auto model_contact = generateContactPoints(storage);
+
+    auto layer = model_contact.front()->layer();
+    auto first = model_contact.begin();
+    auto last = first;
+    for (; layer != 0; --layer)
+    {
+        // Add any new contact nodes in this layer
+        last = std::upper_bound(first, model_contact.end(), layer,
+                                [&](const auto& l, const auto& n) { return n->layer() < l; });
+        std::move(first, last, std::back_inserter(trees_));
+        first = last;
+
+        // Process the current layer and drop the nodes into the next layer down
+        processLayer(layer);
+        if (layer != 0)
+        {
+            dropNodes();
+        }
+    }
+    drawCircles(storage);
+}
+
 }
 }
