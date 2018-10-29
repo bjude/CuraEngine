@@ -250,5 +250,27 @@ namespace std
     };
 }
 
-#endif /* TREESUPPORT_H */
+namespace cura
+{
+namespace Tree
+{
 
+struct TreeParams
+{
+};
+
+class ModelVolumes
+{
+};
+
+class Node
+{
+};
+
+class TreeSupport
+{
+};
+}
+}
+
+#endif /* TREESUPPORT_H */
