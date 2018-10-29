@@ -680,4 +680,74 @@ void TreeSupport::propagateCollisionAreas(const SliceDataStorage& storage, const
     }
 }
 
+namespace Tree
+{
+
+ModelVolumes::ModelVolumes(const TreeParams& params, const SliceDataStorage& storage) :
+    params_{params}, machine_border_{calculate_machine_border(storage, params)}
+{
+    for (auto i = 0; i < storage.support.supportLayers.size(); ++i)
+    {
+        layer_outlines_.push_back(storage.getLayerOutlines(i, false));
+    }
+}
+
+const Polygons& ModelVolumes::collision(coord_t radius, int layer) const
+{
+    const auto it = collision_cache_.find({radius, layer});
+    if (it != collision_cache_.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        const auto& outline = layer_outlines_[layer];
+        auto collision_areas = outline.unionPolygons(machine_border_);
+        collision_areas = collision_areas.offset(params_.xy_distance + radius, ClipperLib::JoinType::jtRound);
+        const auto ret = collision_cache_.insert({{radius, layer}, std::move(collision_areas)});
+        assert(ret.second);
+        return ret.first->second;
+    }
+}
+
+const Polygons& ModelVolumes::avoidance(coord_t radius, int layer) const
+{
+    RadiusLayerPair key{radius, layer};
+    const auto it = avoidance_cache_.find(key);
+    if (it != avoidance_cache_.end())
+    {
+        return it->second;
+    }
+    else if (layer == 0)
+    {
+        avoidance_cache_[key] = collision(radius, 0);
+    }
+    else
+    {
+        auto avoidance_areas = avoidance(radius, layer - 1).offset(-params_.max_move).smooth(5);
+        avoidance_areas = avoidance_areas.unionPolygons(collision(radius, layer));
+        const auto ret = avoidance_cache_.insert({key, std::move(avoidance_areas)});
+        assert(ret.second);
+        return ret.first->second;
+    }
+}
+
+const Polygons& ModelVolumes::internal_model(coord_t radius, int layer) const
+{
+    RadiusLayerPair key{radius, layer};
+    const auto it = internal_model_cache_.find(key);
+    if (it != internal_model_cache_.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        auto&& internal_areas = avoidance(radius, layer).difference(collision(radius, layer));
+        const auto ret = internal_model_cache_.insert({key, internal_areas});
+        assert(ret.second);
+        return ret.first->second;
+    }
+}
+
+}
 }
