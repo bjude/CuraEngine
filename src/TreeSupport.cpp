@@ -795,10 +795,10 @@ void TreeSupport::generateSupportAreas(SliceDataStorage& storage)
 }
 
 
-std::vector<std::vector<Node*>::iterator> TreeSupport::groupNodes(std::vector<Node*>& nodes, int layer) const
+auto TreeSupport::groupNodes(NodePtrVec& nodes, int layer) const -> std::vector<NodePtrVec::iterator>
 {
     const auto parts = volumes_.avoidance(0, layer).splitIntoParts();
-    std::vector<std::vector<Node*>::iterator> iters{nodes.begin()};
+    std::vector<NodePtrVec::iterator> iters{nodes.begin()};
 
     const auto part_dist = [](const auto& part, const auto& node) {
         if (part.inside(node.position()))
@@ -812,13 +812,13 @@ std::vector<std::vector<Node*>::iterator> TreeSupport::groupNodes(std::vector<No
         }
     };
 
-    iters.push_back(std::partition(nodes.begin(), nodes.end(), [&](const auto* node) {
+    iters.push_back(std::partition(nodes.begin(), nodes.end(), [&](const auto& node) {
         return !volumes_.avoidance(0, layer).inside(node->position());
     }));
 
     for (auto i = 0; i < parts.size(); ++i)
     {
-        const auto it = std::partition(iters.back(), nodes.end(), [&](const auto* node) {
+        const auto it = std::partition(iters.back(), nodes.end(), [&](const auto& node) {
             const auto it = std::min_element(parts.begin() + i, parts.end(), [&](const auto& p1, const auto& p2) {
                 return part_dist(p1, *node) < part_dist(p2, *node);
             });
