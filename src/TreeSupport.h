@@ -7,6 +7,11 @@
 #include <forward_list>
 #include <unordered_set>
 
+#include <memory>
+#include <vector>
+#include <utility>
+#include <unordered_map>
+
 #include "sliceDataStorage.h"
 
 namespace cura
@@ -259,16 +264,81 @@ struct TreeParams
 {
 };
 
+Polygons calculate_machine_border(const SliceDataStorage& storage, const TreeParams& params);
+
 class ModelVolumes
 {
+public:
+    ModelVolumes(const TreeParams& params, const SliceDataStorage& storage);
+
+    ModelVolumes(const ModelVolumes&) = delete;
+    ModelVolumes& operator=(const ModelVolumes&) = delete;
+
+    const Polygons& collision(coord_t radius, int layer) const;
+    const Polygons& avoidance(coord_t radius, int layer) const;
+    const Polygons& internal_model(coord_t radius, int layer) const;
+
+private:
+    using RadiusLayerPair = std::pair<coord_t, int>;
+
+    const TreeParams params_;
+    Polygons machine_border_;
+    std::vector<Polygons> layer_outlines_;
+    mutable std::unordered_map<RadiusLayerPair, Polygons> collision_cache_;
+    mutable std::unordered_map<RadiusLayerPair, Polygons> avoidance_cache_;
+    mutable std::unordered_map<RadiusLayerPair, Polygons> internal_model_cache_;
 };
 
 class Node
 {
+public:
+    Node() = default;
+    Node(const Point& pos, coord_t radius, int layer, std::vector<std::unique_ptr<Node>> children,
+         Node* parent = nullptr);
+
+    Node& operator=(Node&&) = default;
+    ~Node() = default;
+
+    void merge(std::unique_ptr<Node> other);
+    void merge(std::vector<std::unique_ptr<Node>> others);
+
+    Node(const Node&) = delete;
+    Node& operator=(const Node&) = delete;
+
+    const Point& position() const { return position_; }
+    const int& layer() const { return layer_; }
+    const std::vector<std::unique_ptr<Node>>& children() const { return children_; }
+
+private:
+    Point position_{0, 0};
+    coord_t radius_{0};
+    int layer_{0};
+    std::vector<std::unique_ptr<Node>> children_{};
+    Node* parent_{nullptr};
 };
 
 class TreeSupport
 {
+    using NodePtrVec = std::vector<std::unique_ptr<Node>>;
+
+public:
+    TreeSupport(const TreeParams& params, const SliceDataStorage& storage);
+    void generateSupportAreas(SliceDataStorage& storage);
+
+private:
+    void combineClose() const;
+    void dropNodes() const;
+    NodePtrVec generateContactPoints(const SliceDataStorage& mesh) const;
+    void processLayer(int layer) const;
+    void drawCircles(SliceDataStorage& storage) const;
+
+    std::vector<Node*> gatherNodes(int layer) const;
+
+    std::vector<std::vector<Node*>::iterator> groupNodes(std::vector<Node*>& nodes, int layer) const;
+
+    TreeParams params_;
+    ModelVolumes volumes_;
+    NodePtrVec trees_;
 };
 }
 }
