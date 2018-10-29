@@ -255,6 +255,17 @@ namespace std
     };
 }
 
+namespace std {
+template <typename T1, typename T2>
+struct hash<std::pair<T1, T2>> {
+    size_t operator()(const std::pair<T1, T2>& val) const {
+        const auto first = std::hash<T1>{}(val.first);
+        const auto second = std::hash<T2>{}(val.second);
+        return first ^ (second + 0x9e3779b9 + (first << 6) + (first >> 2));
+    }
+};
+}
+
 namespace cura
 {
 namespace Tree
