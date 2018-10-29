@@ -794,5 +794,40 @@ void TreeSupport::generateSupportAreas(SliceDataStorage& storage)
     drawCircles(storage);
 }
 
+
+std::vector<std::vector<Node*>::iterator> TreeSupport::groupNodes(std::vector<Node*>& nodes, int layer) const
+{
+    const auto parts = volumes_.avoidance(0, layer).splitIntoParts();
+    std::vector<std::vector<Node*>::iterator> iters{nodes.begin()};
+
+    const auto part_dist = [](const auto& part, const auto& node) {
+        if (part.inside(node.position()))
+        {
+            return coord_t{0};
+        }
+        else
+        {
+            const auto closest = PolygonUtils::findClosest(node.position(), part);
+            return vSize2(node.position() - closest.location);
+        }
+    };
+
+    iters.push_back(std::partition(nodes.begin(), nodes.end(), [&](const auto* node) {
+        return !volumes_.avoidance(0, layer).inside(node->position());
+    }));
+
+    for (auto i = 0; i < parts.size(); ++i)
+    {
+        const auto it = std::partition(iters.back(), nodes.end(), [&](const auto* node) {
+            const auto it = std::min_element(parts.begin() + i, parts.end(), [&](const auto& p1, const auto& p2) {
+                return part_dist(p1, *node) < part_dist(p2, *node);
+            });
+            return std::distance(parts.begin(), it) == i;
+        });
+        iters.push_back(it);
+    }
+    iters.push_back(nodes.end());
+    return iters;
+}
 }
 }
