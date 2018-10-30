@@ -721,6 +721,7 @@ const Polygons& ModelVolumes::avoidance(coord_t radius, int layer) const
     else if (layer == 0)
     {
         avoidance_cache_[key] = collision(radius, 0);
+        return avoidance_cache_[key];
     }
     else
     {
