@@ -813,6 +813,19 @@ void TreeSupport::dropNodes()
     trees_ = std::move(next_layer);
 }
 
+auto TreeSupport::generateContactPoints(const SliceDataStorage& data) const -> NodePtrVec {
+    NodePtrVec points;
+    for (auto & mesh : data.meshes) {
+        if (mesh.settings.get<bool>("support_tree_enable")) {
+            auto pts = generateContactPoints(mesh);
+            std::move(pts.begin(), pts.end(), std::back_inserter(points));
+        }
+    }
+    // Sort contact points by layer number (descending, since we process higher layers first)
+    std::sort(points.begin(), points.end(), [](const NodePtr& a, const NodePtr& b) { return a->layer() > b->layer(); });
+    return points;
+}
+
 std::vector<Point> TreeSupport::generateContactSamplePoints(const SliceMeshStorage& mesh) const {
     // First generate grid points to cover the entire area of the print.
     AABB bounding_box = mesh.bounding_box.flatten();
@@ -851,6 +864,67 @@ std::vector<Point> TreeSupport::generateContactSamplePoints(const SliceMeshStora
         }
     }
     return grid_points;
+}
+
+auto TreeSupport::generateContactPoints(const SliceMeshStorage& mesh) const -> NodePtrVec
+{
+    NodePtrVec contact_points{};
+    const auto grid_points = generateContactSamplePoints(mesh);
+
+    const coord_t layer_height = params_.layer_height;
+    const coord_t z_distance_top = params_.z_gap;
+    // Support must always be 1 layer below overhang.
+    const int z_distance_top_layers
+        = round_up_divide(static_cast<unsigned>(z_distance_top), static_cast<unsigned>(layer_height)) + 1;
+    // How many roof layers, if roof is enabled.
+    const size_t support_roof_layers = params_.support_roof_layers;
+    const coord_t half_overhang_distance = std::tan(params_.support_angle) * layer_height / 2;
+    for (auto layer_nr = 1; layer_nr < mesh.overhang_areas.size() - z_distance_top_layers; layer_nr++)
+    {
+        const Polygons& overhang = mesh.overhang_areas[layer_nr + z_distance_top_layers];
+        if (overhang.empty())
+        {
+            continue;
+        }
+
+        for (const ConstPolygonRef overhang_part : overhang)
+        {
+            // Pre-generate the AABB for a quick pre-filter.
+            AABB overhang_bounds(overhang_part);
+            // Allow for points to be within half an overhang step of the overhang area.
+            overhang_bounds.expand(half_overhang_distance);
+            bool added = false; // Did we add a point this way?
+            for (Point candidate : grid_points)
+            {
+                if (overhang_bounds.contains(candidate))
+                {
+                    // Move point towards the border of the polygon if it is closer than half the overhang
+                    // distance: Catch points that fall between overhang areas on constant surfaces.
+                    constexpr coord_t distance_inside = 0;
+                    PolygonUtils::moveInside(overhang_part, candidate, distance_inside,
+                                             half_overhang_distance * half_overhang_distance);
+                    constexpr bool border_is_inside = true;
+                    if (overhang_part.inside(candidate, border_is_inside)
+                        && !volumes_.collision(0, layer_nr).inside(candidate, border_is_inside))
+                    {
+                        NodePtr node{new Node(candidate, params_.initial_radius, layer_nr)};
+                        contact_points.push_back(std::move(node));
+                        added = true;
+                    }
+                }
+            }
+            // If we didn't add any points due to bad luck, we want to add one anyway such that loose parts are also
+            // supported.
+            if (!added)
+            {
+                Point candidate = mesh.bounding_box.flatten().getMiddle();
+                PolygonUtils::moveInside(overhang_part, candidate);
+                NodePtr node{new Node(candidate, params_.initial_radius, layer_nr, {})};
+                contact_points.push_back(std::move(node));
+            }
+        }
+    }
+    return contact_points;
 }
 
 

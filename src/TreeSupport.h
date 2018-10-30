@@ -12,6 +12,8 @@
 #include <utility>
 #include <unordered_map>
 
+#include "settings/types/AngleRadians.h" //Creating the correct branch angles.
+
 #include "sliceDataStorage.h"
 
 namespace cura
@@ -279,6 +281,11 @@ struct TreeParams
     coord_t xy_distance;
     coord_t max_move;
     coord_t radius_increment;
+    coord_t point_spread;
+    coord_t z_gap;
+    size_t support_roof_layers;
+    AngleRadians support_angle;
+    coord_t initial_radius;
 };
 
 Polygons calculate_machine_border(const SliceDataStorage& storage, const TreeParams& params);
@@ -350,8 +357,9 @@ public:
 private:
     void combineClose() const;
     void dropNodes();
-    NodePtrVec generateContactPoints(const SliceDataStorage& mesh) const;
     void processLayer(int layer) const;
+    NodePtrVec generateContactPoints(const SliceDataStorage& data) const;
+    NodePtrVec generateContactPoints(const SliceMeshStorage& mesh) const;
     std::vector<Point> generateContactSamplePoints(const SliceMeshStorage& mesh) const;
     void drawCircles(SliceDataStorage& storage) const;
 
