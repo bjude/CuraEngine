@@ -968,7 +968,8 @@ auto TreeSupport::groupNodes() -> std::vector<NodePtrVec::iterator>
     return iters;
 }
 
-int TreeSupport::currentLayer() const {
+int TreeSupport::currentLayer() const
+{
     assert(trees_.size() != 0);
     assert(std::all_of(trees_.begin(), trees_.end(),
                        [](const NodePtr& n) { return n->layer() == trees_.front()->layer(); }));
