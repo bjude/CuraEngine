@@ -326,6 +326,8 @@ public:
     const coord_t& radius() const { return radius_; }
     const int& layer() const { return layer_; }
     const std::vector<std::unique_ptr<Node>>& children() const { return children_; }
+    const Node* parent() { return parent_; }
+
     void parent(Node* parent) { parent_ = parent; }
 
 private:
