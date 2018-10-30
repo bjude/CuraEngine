@@ -932,10 +932,10 @@ auto TreeSupport::generateContactPoints(const SliceMeshStorage& mesh) const -> N
 }
 
 
-auto TreeSupport::groupNodes(NodePtrVec& nodes, int layer) const -> std::vector<NodePtrVec::iterator>
+auto TreeSupport::groupNodes() -> std::vector<NodePtrVec::iterator>
 {
-    const auto parts = volumes_.avoidance(0, layer).splitIntoParts();
-    std::vector<NodePtrVec::iterator> iters{nodes.begin()};
+    const auto parts = volumes_.avoidance(0, currentLayer()).splitIntoParts();
+    std::vector<NodePtrVec::iterator> iters{trees_.begin()};
 
     const auto part_dist = [](const auto& part, const auto& node) {
         if (part.inside(node.position()))
@@ -949,21 +949,22 @@ auto TreeSupport::groupNodes(NodePtrVec& nodes, int layer) const -> std::vector<
         }
     };
 
-    iters.push_back(std::partition(nodes.begin(), nodes.end(), [&](const auto& node) {
-        return !volumes_.avoidance(0, layer).inside(node->position());
+    iters.push_back(std::partition(trees_.begin(), trees_.end(), [&](const NodePtr& node) {
+        return !volumes_.avoidance(0, currentLayer()).inside(node->position());
     }));
 
     for (auto i = 0; i < parts.size(); ++i)
     {
-        const auto it = std::partition(iters.back(), nodes.end(), [&](const auto& node) {
-            const auto it = std::min_element(parts.begin() + i, parts.end(), [&](const auto& p1, const auto& p2) {
-                return part_dist(p1, *node) < part_dist(p2, *node);
-            });
+        const auto it = std::partition(iters.back(), trees_.end(), [&](const NodePtr& node) {
+            const auto it
+                = std::min_element(parts.begin() + i, parts.end(), [&](const PolygonsPart& p1, const PolygonsPart& p2) {
+                      return part_dist(p1, *node) < part_dist(p2, *node);
+                  });
             return std::distance(parts.begin(), it) == i;
         });
         iters.push_back(it);
     }
-    iters.push_back(nodes.end());
+    iters.push_back(trees_.end());
     return iters;
 }
 
