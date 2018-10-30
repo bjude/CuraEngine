@@ -786,13 +786,17 @@ void TreeSupport::generateSupportAreas(SliceDataStorage& storage)
         first = last;
 
         // Process the current layer and drop the nodes into the next layer down
-        processLayer(layer);
-        if (layer != 0)
-        {
-            dropNodes();
-        }
+        processLayer();
     }
     drawCircles(storage);
+}
+
+void TreeSupport::processLayer() {
+    combineClose(params_.max_move);
+    moveNodes(params_.max_move);
+    if (currentLayer() != 0) {
+        dropNodes();
+    }
 }
 
 void TreeSupport::dropNodes()

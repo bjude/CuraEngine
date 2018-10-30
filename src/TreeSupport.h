@@ -355,9 +355,10 @@ public:
     void generateSupportAreas(SliceDataStorage& storage);
 
 private:
-    void combineClose() const;
+    void processLayer();
+    void combineClose(const coord_t& threshold) const;
+    void moveNodes(const coord_t& move_distance) const;
     void dropNodes();
-    void processLayer(int layer) const;
     NodePtrVec generateContactPoints(const SliceDataStorage& data) const;
     NodePtrVec generateContactPoints(const SliceMeshStorage& mesh) const;
     std::vector<Point> generateContactSamplePoints(const SliceMeshStorage& mesh) const;
