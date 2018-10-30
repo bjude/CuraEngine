@@ -352,6 +352,7 @@ private:
     void dropNodes();
     NodePtrVec generateContactPoints(const SliceDataStorage& mesh) const;
     void processLayer(int layer) const;
+    std::vector<Point> generateContactSamplePoints(const SliceMeshStorage& mesh) const;
     void drawCircles(SliceDataStorage& storage) const;
 
     std::vector<Node*> gatherNodes(int layer) const;

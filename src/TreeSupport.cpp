@@ -813,6 +813,46 @@ void TreeSupport::dropNodes()
     trees_ = std::move(next_layer);
 }
 
+std::vector<Point> TreeSupport::generateContactSamplePoints(const SliceMeshStorage& mesh) const {
+    // First generate grid points to cover the entire area of the print.
+    AABB bounding_box = mesh.bounding_box.flatten();
+    // We want to create the grid pattern at an angle, so compute the bounding
+    // box required to cover that angle.
+    // Rotation of 22 degrees provides better support of diagonal lines.
+    constexpr double rotate_angle = 22.0 / 180.0 * M_PI;
+    const Point bounding_box_size = bounding_box.max - bounding_box.min;
+
+    // Store centre of AABB so we can relocate the generated points
+    const auto centre = bounding_box.getMiddle();
+    const auto sin_angle = std::sin(rotate_angle);
+    const auto cos_angle = std::cos(rotate_angle);
+    // Calculate the dimensions of the AABB of the mesh AABB after being rotated
+    // by `rotate_angle`. Halve the dimensions since we'll be using it as a +-
+    // offset from the centre of `bounding_box`.
+    const auto rotated_dims
+        = Point(static_cast<ClipperLib::cInt>(bounding_box_size.X * cos_angle + bounding_box_size.Y * sin_angle),
+                static_cast<ClipperLib::cInt>(bounding_box_size.X * sin_angle + bounding_box_size.Y * cos_angle))
+        / 2;
+
+    std::vector<Point> grid_points;
+    for (auto x = -rotated_dims.X; x <= rotated_dims.X; x += params_.point_spread)
+    {
+        for (auto y = -rotated_dims.Y; y <= rotated_dims.Y; y += params_.point_spread)
+        {
+            // Construct a point as an offset from the mesh AABB centre, rotated
+            // about the mesh AABB centre
+            const auto pt = rotate(Point(x, y), rotate_angle) + centre;
+            // Only add to grid points if we have a chance to collide with the
+            // mesh
+            if (bounding_box.contains(pt))
+            {
+                grid_points.push_back(pt);
+            }
+        }
+    }
+    return grid_points;
+}
+
 
 auto TreeSupport::groupNodes(NodePtrVec& nodes, int layer) const -> std::vector<NodePtrVec::iterator>
 {
