@@ -310,7 +310,7 @@ class Node
 {
 public:
     Node() = default;
-    Node(const Point& pos, coord_t radius, int layer, std::vector<std::unique_ptr<Node>> children,
+    Node(const Point& pos, coord_t radius, int layer, std::vector<std::unique_ptr<Node>> children = {},
          Node* parent = nullptr);
 
     Node& operator=(Node&&) = default;
