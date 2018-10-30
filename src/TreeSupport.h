@@ -340,7 +340,8 @@ private:
 
 class TreeSupport
 {
-    using NodePtrVec = std::vector<std::unique_ptr<Node>>;
+    using NodePtr = std::unique_ptr<Node>;
+    using NodePtrVec = std::vector<NodePtr>;
 
 public:
     TreeSupport(const TreeParams& params, const SliceDataStorage& storage);

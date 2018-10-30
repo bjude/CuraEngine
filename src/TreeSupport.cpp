@@ -805,7 +805,7 @@ void TreeSupport::dropNodes()
         // Hack because initialiser lists always copy so we cant do children{std::move(node)}
         NodePtrVec children;
         children.push_back(std::move(node));
-        std::unique_ptr<Node> next_layer_node{new Node(pos, radius, layer, std::move(children))};
+        NodePtr next_layer_node{new Node(pos, radius, layer, std::move(children))};
         next_layer_node->children().front()->parent(next_layer_node.get());
         next_layer.push_back(std::move(next_layer_node));
     }
