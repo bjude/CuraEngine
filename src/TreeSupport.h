@@ -366,6 +366,7 @@ private:
     std::vector<Node*> gatherNodes(int layer) const;
 
     std::vector<NodePtrVec::iterator> groupNodes(NodePtrVec& nodes, int layer) const;
+    int currentLayer() const;
 
     TreeParams params_;
     ModelVolumes volumes_;
