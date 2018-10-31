@@ -325,6 +325,15 @@ public:
 
     void merge(std::unique_ptr<Node> other);
     void merge(std::vector<std::unique_ptr<Node>> others);
+    template <typename It>
+    void merge(It first, It last)
+    {
+        while (first != last)
+        {
+            merge(std::move(*first));
+            ++first;
+        }
+    }
 
     Node(const Node&) = delete;
     Node& operator=(const Node&) = delete;
@@ -335,6 +344,7 @@ public:
     const std::vector<std::unique_ptr<Node>>& children() const { return children_; }
     const Node* parent() { return parent_; }
 
+    void position(const Point& pos) { position_ = pos; }
     void parent(Node* parent) { parent_ = parent; }
 
 private:
