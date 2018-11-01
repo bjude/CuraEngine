@@ -818,8 +818,9 @@ std::vector<Polygons> circlePolygons(const std::vector<std::unique_ptr<Node>>& n
     const auto circle = [](const Point& pos, coord_t radius){
         Polygon output;
         for (auto i = 0; i < CIRCLE_RESOLUTION; ++i) {
-            const auto angle = static_cast<double>(i) * CIRCLE_RESOLUTION * 2 * M_PI;
-            output.emplace_back(std::cos(angle) * radius, std::sin(angle) * radius);
+            const auto angle = static_cast<double>(i) / CIRCLE_RESOLUTION * 2 * M_PI;
+            const auto circle_pt = Point(std::cos(angle) * radius, std::sin(angle) * radius);
+            output.emplace_back(pos + circle_pt);
         }
         return output;
     };
