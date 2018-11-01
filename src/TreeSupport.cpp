@@ -688,6 +688,28 @@ void TreeSupport::propagateCollisionAreas(const SliceDataStorage& storage, const
 namespace Tree
 {
 
+Point moveTowards(const Point& point, const Point& target, const Polygons& invalid, coord_t move_limit)
+{
+    const auto new_pos = [&]() {
+        auto diff = target - point;
+        if (vSize(diff) > move_limit)
+        {
+            return point + normal(diff, move_limit);
+        }
+        else
+        {
+            return target;
+        }
+    }();
+    if (invalid.inside(new_pos)) {
+        auto output = new_pos;
+        PolygonUtils::moveOutside(invalid, output, move_limit);
+        return output;
+    } else {
+        return new_pos;
+    }
+}
+
 std::vector<Polygons> circlePolygons(const std::vector<std::unique_ptr<Node>>& nodes) {
     std::vector<Polygons> output{};
     std::deque<Node*> queue{};

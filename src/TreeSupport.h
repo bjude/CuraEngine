@@ -290,6 +290,7 @@ struct TreeParams
 };
 
 Polygons calculate_machine_border(const SliceDataStorage& storage, const TreeParams& params);
+Point moveTowards(const Point& point, const Point& target, const Polygons& invalid, coord_t move_limit);
 std::vector<Polygons> circlePolygons(const std::vector<std::unique_ptr<Node>>& nodes);
 
 class ModelVolumes
