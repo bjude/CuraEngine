@@ -276,17 +276,18 @@ class Node;
 
 struct TreeParams
 {
+    TreeParams();
+    TreeParams(const Settings& settings);
+
     coord_t branch_radius;
-    coord_t radius_sample_resolution;
     coord_t layer_height;
     coord_t xy_distance;
+    AngleRadians support_angle;
     coord_t max_move;
     coord_t radius_increment;
     coord_t point_spread;
     coord_t z_gap;
     size_t support_roof_layers;
-    AngleRadians support_angle;
-    coord_t initial_radius;
     bool can_support_on_model;
     BuildPlateShape buildplate_shape;
     EPlatformAdhesion adhesion_type;

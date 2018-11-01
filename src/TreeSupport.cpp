@@ -688,6 +688,48 @@ void TreeSupport::propagateCollisionAreas(const SliceDataStorage& storage, const
 namespace Tree
 {
 
+TreeParams::TreeParams() : TreeParams(Application::getInstance().current_slice->scene.current_mesh_group->settings) {}
+
+TreeParams::TreeParams(const Settings& settings)
+{
+    branch_radius = settings.get<coord_t>("support_tree_branch_diameter") / 2;
+    layer_height = settings.get<coord_t>("layer_height");
+    xy_distance = settings.get<coord_t>("support_xy_distance");
+    support_angle = settings.get<AngleRadians>("support_tree_angle");
+    max_move = support_angle < 90 ? static_cast<coord_t>(std::tan(support_angle) * layer_height)
+                                  : std::numeric_limits<coord_t>::max();
+    radius_increment = std::tan(settings.get<AngleRadians>("support_tree_branch_diameter_angle")) * layer_height;
+    point_spread = settings.get<coord_t>("support_tree_branch_distance");
+    z_gap = settings.get<coord_t>("support_top_distance");
+    support_roof_layers = [&]() -> size_t {
+        if (settings.get<bool>("support_roof_enable"))
+        {
+            return round_divide(settings.get<coord_t>("support_roof_height"), layer_height);
+        }
+        else
+        {
+            return 0;
+        }
+    }();
+    can_support_on_model = settings.get<ESupportType>("support_type") == ESupportType::EVERYWHERE;
+    buildplate_shape = settings.get<BuildPlateShape>("machine_shape");
+    adhesion_type = settings.get<EPlatformAdhesion>("adhesion_type");
+    const auto first_layer_factor = settings.get<Ratio>("initial_layer_line_width_factor");
+    brim_size =
+    [&]() {
+        return settings.get<coord_t>("skirt_brim_line_width") * first_layer_factor
+            * settings.get<size_t>("brim_line_count");
+    }();
+    raft_margin = settings.get<coord_t>("raft_margin");
+    skirt_size = [&]() {
+        return settings.get<coord_t>("skirt_gap")
+            + settings.get<coord_t>("skirt_brim_line_width") * first_layer_factor
+            * settings.get<size_t>("skirt_line_count");
+    }();
+    line_width = settings.get<coord_t>("support_line_width");
+    wall_count = settings.get<size_t>("support_tree_wall_count");
+}
+
 Polygons calculate_machine_border(const SliceDataStorage& storage, const TreeParams& params) {
 
     const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
@@ -1148,7 +1190,7 @@ auto TreeSupport::generateContactPoints(const SliceMeshStorage& mesh) const -> N
                     if (overhang_part.inside(candidate, border_is_inside)
                         && !volumes_.collision(0, layer_nr).inside(candidate, border_is_inside))
                     {
-                        NodePtr node{new Node(candidate, params_.initial_radius, layer_nr)};
+                        NodePtr node{new Node(candidate, params_.branch_radius, layer_nr)};
                         contact_points.push_back(std::move(node));
                         added = true;
                     }
@@ -1160,7 +1202,7 @@ auto TreeSupport::generateContactPoints(const SliceMeshStorage& mesh) const -> N
             {
                 Point candidate = mesh.bounding_box.flatten().getMiddle();
                 PolygonUtils::moveInside(overhang_part, candidate);
-                NodePtr node{new Node(candidate, params_.initial_radius, layer_nr, {})};
+                NodePtr node{new Node(candidate, params_.branch_radius, layer_nr, {})};
                 contact_points.push_back(std::move(node));
             }
         }
