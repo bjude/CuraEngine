@@ -792,11 +792,111 @@ void TreeSupport::generateSupportAreas(SliceDataStorage& storage)
 }
 
 void TreeSupport::processLayer() {
-    combineClose(params_.max_move);
-    moveNodes(params_.max_move);
-    if (currentLayer() != 0) {
-        dropNodes();
+    // Drop all the nodes in the current layer straight down
+    dropNodes();
+
+    const auto layer = currentLayer();
+    // If we can't support on the model then check for any branches that can only be supported on the model
+    if (!params_.can_support_on_model) {
+        removeUnsupportableByBuildPlate();
     }
+
+    const auto groups = groupNodes();
+
+    // Loop through each group
+    for (auto it_s = groups.begin(), it_e = groups.begin() + 1; it_e != groups.end(); ++it_s, ++it_e) {
+        const auto start = *it_s;
+        const auto end = *it_e;
+        const auto num_nodes = std::distance(start, end);
+
+        // Combine all nearby nodes
+        const auto mst = [&] {
+            std::unordered_set<Point> positions;
+            std::transform(start, end, std::inserter(positions, positions.end()),
+                           [](const NodePtr& node) { return node->position(); });
+            return MinimumSpanningTree{positions};
+        }();
+
+        const auto combine_threshold = params_.max_move;
+        // Loop through all nodes in the current group
+        for (auto it = start; it != end;)
+        {
+            auto& current_node = *it;
+            const auto neighbors = mst.adjacentNodes(current_node->position());
+            if (!current_node)
+            {
+                // Node has already been merged
+                continue;
+            }
+            else if (neighbors.size() == 1)
+            {
+                // We're in a leaf node so merge this into the neighbor if we can merge
+                if (vSize(current_node->position() - neighbors[0]) <= combine_threshold)
+                {
+                    auto& neighbor
+                        = *std::find_if(start, end, [&](const auto& n) { return neighbors[0] == n->position(); });
+                    neighbor->merge(std::move(current_node));
+                }
+                ++it;
+            }
+            else
+            {
+                // We're in a non-leaf node so gather all the neighbors we can merge and merge them.
+                // Helpers for checking nodes
+                const auto is_neighbor = [&](const NodePtr& n) {
+                    return std::find(neighbors.begin(), neighbors.end(), n->position()) != neighbors.end();
+                };
+                const auto can_merge = [&](const NodePtr& n) {
+                    return vSize(n->position() - current_node->position()) <= combine_threshold;
+                };
+                // Gather all mergeable nodes to the start of the [start, end) range
+                const auto merge_end
+                    = std::partition(it, end, [&](const NodePtr& n) { return is_neighbor(n) && can_merge(n); });
+                current_node->merge(it + 1, merge_end);
+                // Skip over the merged nodes
+                it = merge_end;
+            }
+        }
+
+        // Move all remaining nodes
+        for (auto it = start; it != end; ++it) {
+            auto& current_node = *it;
+            if (!current_node) {
+                // Node was merged in first pass
+                continue;
+            } else {
+                auto new_pos = current_node->position();
+                const auto& avoid = volumes_.avoidance(current_node->radius(), layer);
+                // Check if we are an a
+                if (avoid.inside(current_node->position())) {
+                    const auto to_outside = PolygonUtils::findClosest(current_node->position(), avoid);
+                    if (vSize(current_node->position() - to_outside.location) > params_.max_move) {
+                        // Cannot move to a feasible, supportable location so drop the branch
+                        current_node.reset();
+                        continue;
+                    } else {
+                        new_pos = to_outside.location;
+                    }
+                }
+
+
+                // Try to move towards the mean position of all neighbors
+                const auto neighbors = mst.adjacentNodes(current_node->position());
+                const auto target = std::accumulate(neighbors.begin(), neighbors.end(), Point(0, 0),
+                                                    [](const Point& p1, const Point& p2) { return p1 + p2; })
+                    / neighbors.size();
+                new_pos = moveTowards(current_node->position(), target,
+                                      volumes_.avoidance(current_node->radius(), layer), params_.max_move);
+                // If this movement would require moving too far than drop
+                if (vSize(new_pos - current_node->position()) > params_.max_move) {
+                    current_node.reset();
+                }
+            }
+        }
+    }
+    // Remove any nodes that have been removed (because they cant be supported) or merged. unique_ptr is guaranteed to
+    // compare equal to nullptr after it has been moved from or reset so we can do the below.
+    trees_.erase(std::remove(trees_.begin(), trees_.end(), nullptr), trees_.end());
 }
 
 void TreeSupport::dropNodes()

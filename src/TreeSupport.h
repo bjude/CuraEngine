@@ -366,8 +366,6 @@ public:
 
 private:
     void processLayer();
-    void combineClose(const coord_t& threshold) const;
-    void moveNodes(const coord_t& move_distance) const;
     void dropNodes();
     NodePtrVec generateContactPoints(const SliceDataStorage& data) const;
     NodePtrVec generateContactPoints(const SliceMeshStorage& mesh) const;
