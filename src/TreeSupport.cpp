@@ -871,6 +871,10 @@ Node::Node(const Point& pos, coord_t radius, int layer, std::vector<std::unique_
 
 void Node::merge(std::unique_ptr<Node> other)
 {
+    if (!other)
+    {
+        return;
+    }
     assert(layer_ == other->layer);
     radius_ = std::max(radius_, other->radius_);
     std::move(other->children_.begin(), other->children_.end(), std::back_inserter(children_));
