@@ -287,6 +287,14 @@ struct TreeParams
     size_t support_roof_layers;
     AngleRadians support_angle;
     coord_t initial_radius;
+    bool can_support_on_model;
+    BuildPlateShape buildplate_shape;
+    EPlatformAdhesion adhesion_type;
+    coord_t brim_size;
+    coord_t raft_margin;
+    coord_t skirt_size;
+    coord_t line_width;
+    int wall_count;
 };
 
 Polygons calculate_machine_border(const SliceDataStorage& storage, const TreeParams& params);

@@ -688,6 +688,65 @@ void TreeSupport::propagateCollisionAreas(const SliceDataStorage& storage, const
 namespace Tree
 {
 
+Polygons calculate_machine_border(const SliceDataStorage& storage, const TreeParams& params) {
+
+    const Settings& mesh_group_settings = Application::getInstance().current_slice->scene.current_mesh_group->settings;
+    // Compute the border of the build volume.
+    Polygons actual_border;
+    switch (params.buildplate_shape)
+    {
+    case BuildPlateShape::ELLIPTIC:
+    {
+        actual_border.emplace_back();
+        // Construct an ellipse to approximate the build volume.
+        const coord_t width = storage.machine_size.max.x - storage.machine_size.min.x;
+        const coord_t depth = storage.machine_size.max.y - storage.machine_size.min.y;
+        constexpr unsigned int circle_resolution = 50;
+        for (unsigned int i = 0; i < circle_resolution; i++)
+        {
+            actual_border[0].emplace_back(
+                storage.machine_size.getMiddle().x + std::cos(M_PI * 2 * i / circle_resolution) * width / 2,
+                storage.machine_size.getMiddle().y + std::sin(M_PI * 2 * i / circle_resolution) * depth / 2);
+        }
+        break;
+    }
+    case BuildPlateShape::RECTANGULAR:
+    default:
+        actual_border.add(storage.machine_size.flatten().toPolygon());
+        break;
+    }
+
+    coord_t adhesion_size = 0; // Make sure there is enough room for the platform adhesion around support.
+    const ExtruderTrain& adhesion_extruder = mesh_group_settings.get<ExtruderTrain&>("adhesion_extruder_nr");
+    switch (params.adhesion_type)
+    {
+    case EPlatformAdhesion::BRIM:
+        adhesion_size = params.brim_size;
+        break;
+    case EPlatformAdhesion::RAFT:
+        adhesion_size = params.raft_margin;
+        break;
+    case EPlatformAdhesion::SKIRT:
+        adhesion_size = params.skirt_size;
+        break;
+    case EPlatformAdhesion::NONE:
+        adhesion_size = 0;
+        break;
+    default: // Also use 0.
+        log("Unknown platform adhesion type! Please implement the width of the platform adhesion here.");
+        break;
+    }
+    actual_border = actual_border.offset(-adhesion_size);
+
+    Polygons border;
+    // Put a border of 1m around the print volume so that we don't collide.
+    border.add(actual_border.offset(1000000));
+    // Makes the polygon negative so that we subtract the actual volume from the collision area.
+    actual_border[0].reverse();
+    border.add(actual_border);
+    return border;
+}
+
 Point moveTowards(const Point& point, const Point& target, const Polygons& invalid, coord_t move_limit)
 {
     const auto new_pos = [&]() {
