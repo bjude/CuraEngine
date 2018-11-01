@@ -307,6 +307,9 @@ class ModelVolumes
 public:
     ModelVolumes(const TreeParams& params, const SliceDataStorage& storage);
 
+    ModelVolumes(ModelVolumes&&) = default;
+    ModelVolumes& operator=(ModelVolumes&&) = default;
+
     ModelVolumes(const ModelVolumes&) = delete;
     ModelVolumes& operator=(const ModelVolumes&) = delete;
 
@@ -373,6 +376,7 @@ class TreeSupport
     using NodePtrVec = std::vector<NodePtr>;
 
 public:
+    TreeSupport(const SliceDataStorage& storage);
     TreeSupport(const TreeParams& params, const SliceDataStorage& storage);
     void generateSupportAreas(SliceDataStorage& storage);
 

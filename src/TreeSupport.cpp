@@ -934,6 +934,14 @@ void Node::merge(std::vector<std::unique_ptr<Node>> others)
     }
 }
 
+TreeSupport::TreeSupport(const SliceDataStorage& storage) : TreeSupport(TreeParams{}, storage) {}
+
+TreeSupport::TreeSupport(const TreeParams& params, const SliceDataStorage& storage) :
+    params_{params},
+    volumes_{ModelVolumes(params, storage)},
+    trees_{}
+{}
+
 void TreeSupport::generateSupportAreas(SliceDataStorage& storage)
 {
     auto model_contact = generateContactPoints(storage);
