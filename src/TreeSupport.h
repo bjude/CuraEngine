@@ -378,6 +378,7 @@ public:
 private:
     void processLayer();
     void dropNodes();
+    void removeUnsupportableByBuildPlate();
     NodePtrVec generateContactPoints(const SliceDataStorage& data) const;
     NodePtrVec generateContactPoints(const SliceMeshStorage& mesh) const;
     std::vector<Point> generateContactSamplePoints(const SliceMeshStorage& mesh) const;

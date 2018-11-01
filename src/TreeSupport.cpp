@@ -1031,6 +1031,25 @@ void TreeSupport::dropNodes()
     trees_ = std::move(next_layer);
 }
 
+void TreeSupport::removeUnsupportableByBuildPlate()
+{
+    for (auto& node : trees_)
+    {
+        // Check if we're inside the avoidance area
+        const auto& vol = volumes_.avoidance(node->radius(), currentLayer());
+        if (vol.inside(node->position()))
+        {
+            // Confirm that we cant move to a valid location
+            const auto closest = PolygonUtils::findClosest(node->position(), vol);
+            if (vSize(closest.location - node->position()) > params_.max_move)
+            {
+                node.reset();
+            }
+        }
+    }
+    trees_.erase(std::remove(trees_.begin(), trees_.end(), nullptr), trees_.end());
+}
+
 auto TreeSupport::generateContactPoints(const SliceDataStorage& data) const -> NodePtrVec {
     NodePtrVec points;
     for (auto & mesh : data.meshes) {
