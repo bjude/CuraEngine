@@ -389,7 +389,6 @@ private:
     std::vector<Point> generateContactSamplePoints(const SliceMeshStorage& mesh) const;
     void drawCircles(SliceDataStorage& storage) const;
 
-    std::vector<Node*> gatherNodes(int layer) const;
 
     std::vector<NodePtrVec::iterator> groupNodes();
     int currentLayer() const;

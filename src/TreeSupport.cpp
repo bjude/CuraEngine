@@ -1254,34 +1254,6 @@ void TreeSupport::drawCircles(SliceDataStorage& storage) const {
     }
 }
 
-std::vector<Node*> TreeSupport::gatherNodes(int layer) const
-{
-    std::vector<Node*> output;
-    std::deque<Node*> queue;
-    std::transform(trees_.begin(), trees_.end(), std::back_inserter(queue), [](auto& t) { return t.get(); });
-
-    while (!queue.empty())
-    {
-        auto node = queue.back();
-        queue.pop_back();
-        if (node->layer() == layer)
-        {
-            output.push_back(node);
-        }
-        else if (node->layer() < layer)
-        {
-            std::transform(node->children().begin(), node->children().end(), std::back_inserter(queue),
-                           [](auto& n) { return n.get(); });
-        }
-        else
-        {
-            assert(false);
-            continue;
-        }
-    }
-    return output;
-}
-
 auto TreeSupport::groupNodes() -> std::vector<NodePtrVec::iterator>
 {
     const auto parts = volumes_.avoidance(0, currentLayer()).splitIntoParts();
