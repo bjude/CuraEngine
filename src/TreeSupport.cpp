@@ -1252,6 +1252,8 @@ void TreeSupport::drawCircles(SliceDataStorage& storage) const {
                                                                                    params_.wall_count);
         }
     }
+    storage.support.layer_nr_max_filled_layer = circles.size() - 1;
+    storage.support.generated = true;
 }
 
 auto TreeSupport::groupNodes() -> std::vector<NodePtrVec::iterator>
