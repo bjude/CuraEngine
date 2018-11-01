@@ -1070,7 +1070,7 @@ void TreeSupport::dropNodes()
     {
         const auto pos = node->position();
         const auto radius = node->radius() + params_.radius_increment;
-        const auto layer = node->layer() + 1;
+        const auto layer = node->layer() - 1;
         // Hack because initialiser lists always copy so we cant do children{std::move(node)}
         NodePtrVec children;
         children.push_back(std::move(node));
