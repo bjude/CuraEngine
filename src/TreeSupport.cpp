@@ -11,6 +11,11 @@
 #include "utils/polygon.h" //For splitting polygons into parts.
 #include "utils/polygonUtils.h" //For moveInside.
 
+#include <iterator>
+#include <deque>
+#include <numeric>
+#include <algorithm>
+
 #define SQRT_2 1.4142135623730950488 //Square root of 2.
 #define CIRCLE_RESOLUTION 10 //The number of vertices in each circle.
 
