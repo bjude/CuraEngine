@@ -835,6 +835,9 @@ std::vector<Polygons> circlePolygons(const std::vector<std::unique_ptr<Node>>& n
             output.resize(node->layer() + 1);
         }
         output[node->layer()].add(circle(node->position(), node->radius()));
+        for (auto& child : node->children()) {
+            queue.push_back(child.get());
+        }
     }
     return output;
 }
