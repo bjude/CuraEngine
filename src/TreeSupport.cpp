@@ -941,7 +941,7 @@ void TreeSupport::generateSupportAreas(SliceDataStorage& storage)
     {
         // Add any new contact nodes in this layer
         last = std::upper_bound(first, model_contact.end(), layer,
-                                [&](const auto& l, const auto& n) { return n->layer() < l; });
+                                [&](const int& l, const NodePtr& n) { return n->layer() < l; });
         std::move(first, last, std::back_inserter(trees_));
         first = last;
 
@@ -994,7 +994,7 @@ void TreeSupport::processLayer() {
                 if (vSize(current_node->position() - neighbors[0]) <= combine_threshold)
                 {
                     auto& neighbor
-                        = *std::find_if(start, end, [&](const auto& n) { return neighbors[0] == n->position(); });
+                        = *std::find_if(start, end, [&](const NodePtr& n) { return neighbors[0] == n->position(); });
                     neighbor->merge(std::move(current_node));
                 }
                 ++it;
@@ -1011,7 +1011,7 @@ void TreeSupport::processLayer() {
                 };
                 // Gather all mergeable nodes to the start of the [start, end) range
                 const auto merge_end
-                    = std::partition(it, end, [&](const NodePtr& n) { return is_neighbor(n) && can_merge(n); });
+                    = std::partition(it + 1, end, [&](const NodePtr& n) { return is_neighbor(n) && can_merge(n); });
                 current_node->merge(it + 1, merge_end);
                 // Skip over the merged nodes
                 it = merge_end;
@@ -1269,7 +1269,7 @@ auto TreeSupport::groupNodes() -> std::vector<NodePtrVec::iterator>
     const auto parts = volumes_.avoidance(0, currentLayer()).splitIntoParts();
     std::vector<NodePtrVec::iterator> iters{trees_.begin()};
 
-    const auto part_dist = [](const auto& part, const auto& node) {
+    const auto part_dist = [](const PolygonsPart& part, const Node& node) {
         if (part.inside(node.position()))
         {
             return coord_t{0};
