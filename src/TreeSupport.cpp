@@ -1164,6 +1164,32 @@ auto TreeSupport::generateContactPoints(const SliceMeshStorage& mesh) const -> N
     return contact_points;
 }
 
+void TreeSupport::drawCircles(SliceDataStorage& storage) const {
+    //Pre-generate a circle with correct diameter so that we don't have to recompute those (co)sines every time.
+    Polygon branch_circle;
+    for (unsigned int i = 0; i < CIRCLE_RESOLUTION; i++)
+    {
+        const double angle = static_cast<double>(i) / CIRCLE_RESOLUTION * 2 * M_PI; //In radians.
+        branch_circle.emplace_back(std::cos(angle) * 100, std::sin(angle) * 100);
+    }
+    //Side length of a regular polygon.
+    const coord_t circle_side_length = 2 * params_.branch_radius * std::sin(M_PI / CIRCLE_RESOLUTION);
+
+    const auto circles = circlePolygons(trees_);
+    for (auto layer = 0; layer < circles.size(); ++layer) {
+        auto& support_layer = circles[layer];
+        auto combined = support_layer.unionPolygons();
+
+        for (PolygonRef part : combined) //Convert every part into a PolygonsPart for the support.
+        {
+            PolygonsPart outline;
+            outline.add(part);
+            storage.support.supportLayers[layer].support_infill_parts.emplace_back(outline, params_.line_width,
+                                                                                   params_.wall_count);
+        }
+    }
+}
+
 std::vector<Node*> TreeSupport::gatherNodes(int layer) const
 {
     std::vector<Node*> output;
