@@ -831,8 +831,8 @@ std::vector<Polygons> circlePolygons(const std::vector<std::unique_ptr<Node>>& n
         auto node = queue.front();
         queue.pop_front();
         // Add to output if needed
-        if (output.size() < node->layer()) {
-            output.resize(node->layer());
+        if (output.size() < node->layer() + 1) {
+            output.resize(node->layer() + 1);
         }
         output[node->layer()].add(circle(node->position(), node->radius()));
     }
