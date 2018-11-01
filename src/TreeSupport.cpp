@@ -1040,9 +1040,14 @@ void TreeSupport::processLayer() {
                 // We're in a leaf node so merge this into the neighbor if we can merge
                 if (vSize(current_node->position() - neighbors[0]) <= combine_threshold)
                 {
-                    auto& neighbor
-                        = *std::find_if(start, end, [&](const NodePtr& n) { return neighbors[0] == n->position(); });
-                    neighbor->merge(std::move(current_node));
+                    auto it_neighbor
+                        = std::find_if(it, end, [&](const NodePtr& n) { return neighbors[0] == n->position(); });
+                    if (it_neighbor == end) {
+                        // Couldnt find the nieghbor node. This will only occur when we've already processed
+                        // this pair of nodes but from the other side
+                        continue;
+                    }
+                    (*it_neighbor)->merge(std::move(current_node));
                 }
                 ++it;
             }
