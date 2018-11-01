@@ -917,7 +917,7 @@ void Node::merge(std::unique_ptr<Node> other)
     {
         return;
     }
-    assert(layer_ == other->layer);
+    assert(layer_ == other->layer());
     radius_ = std::max(radius_, other->radius_);
     std::move(other->children_.begin(), other->children_.end(), std::back_inserter(children_));
 }
@@ -1304,7 +1304,7 @@ int TreeSupport::currentLayer() const
 {
     assert(trees_.size() != 0);
     assert(std::all_of(trees_.begin(), trees_.end(),
-                       [](const NodePtr& n) { return n->layer() == trees_.front()->layer(); }));
+                       [&](const NodePtr& n) { return n->layer() == trees_.front()->layer(); }));
     return trees_.front()->layer();
 }
 }
