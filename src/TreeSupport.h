@@ -313,6 +313,8 @@ public:
     ModelVolumes(const ModelVolumes&) = delete;
     ModelVolumes& operator=(const ModelVolumes&) = delete;
 
+    void dropLayersAbove(int layer);
+
     const Polygons& collision(coord_t radius, int layer) const;
     const Polygons& avoidance(coord_t radius, int layer) const;
     const Polygons& internal_model(coord_t radius, int layer) const;

@@ -852,6 +852,30 @@ ModelVolumes::ModelVolumes(const TreeParams& params, const SliceDataStorage& sto
     }
 }
 
+void ModelVolumes::dropLayersAbove(int layer) {
+    for (auto it = collision_cache_.begin(); it != collision_cache_.end();) {
+        if (it->first.second > layer) {
+            it = collision_cache_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto it = avoidance_cache_.begin(); it != avoidance_cache_.end();) {
+        if (it->first.second > layer) {
+            it = avoidance_cache_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto it = internal_model_cache_.begin(); it != internal_model_cache_.end();) {
+        if (it->first.second > layer) {
+            it = internal_model_cache_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 const Polygons& ModelVolumes::collision(coord_t radius, int layer) const
 {
     const auto it = collision_cache_.find({radius, layer});
@@ -960,6 +984,7 @@ void TreeSupport::generateSupportAreas(SliceDataStorage& storage)
         // Process the current layer and drop the nodes into the next layer down
         if (trees_.size() != 0) {
             processLayer();
+            volumes_.dropLayersAbove(layer);
         }
     }
     drawCircles(storage);
