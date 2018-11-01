@@ -1044,11 +1044,13 @@ void TreeSupport::processLayer() {
 
                 // Try to move towards the mean position of all neighbors
                 const auto neighbors = mst.adjacentNodes(current_node->position());
-                const auto target = std::accumulate(neighbors.begin(), neighbors.end(), Point(0, 0),
-                                                    [](const Point& p1, const Point& p2) { return p1 + p2; })
-                    / neighbors.size();
-                new_pos = moveTowards(current_node->position(), target,
-                                      volumes_.avoidance(current_node->radius(), layer), params_.max_move);
+                if (neighbors.size() != 0) {
+                    const auto target = std::accumulate(neighbors.begin(), neighbors.end(), Point(0, 0),
+                                                        [](const Point& p1, const Point& p2) { return p1 + p2; })
+                        / neighbors.size();
+                    new_pos = moveTowards(current_node->position(), target,
+                                            volumes_.avoidance(current_node->radius(), layer), params_.max_move);
+                }
                 // If this movement would require moving too far than drop
                 if (vSize(new_pos - current_node->position()) > params_.max_move) {
                     current_node.reset();
