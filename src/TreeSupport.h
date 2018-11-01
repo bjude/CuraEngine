@@ -272,6 +272,7 @@ namespace cura
 {
 namespace Tree
 {
+class Node;
 
 struct TreeParams
 {
@@ -289,6 +290,7 @@ struct TreeParams
 };
 
 Polygons calculate_machine_border(const SliceDataStorage& storage, const TreeParams& params);
+std::vector<Polygons> circlePolygons(const std::vector<std::unique_ptr<Node>>& nodes);
 
 class ModelVolumes
 {

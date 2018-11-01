@@ -688,6 +688,34 @@ void TreeSupport::propagateCollisionAreas(const SliceDataStorage& storage, const
 namespace Tree
 {
 
+std::vector<Polygons> circlePolygons(const std::vector<std::unique_ptr<Node>>& nodes) {
+    std::vector<Polygons> output{};
+    std::deque<Node*> queue{};
+
+    const auto circle = [](const Point& pos, coord_t radius){
+        Polygon output;
+        for (auto i = 0; i < CIRCLE_RESOLUTION; ++i) {
+            const auto angle = static_cast<double>(i) * CIRCLE_RESOLUTION * 2 * M_PI;
+            output.emplace_back(std::cos(angle) * radius, std::sin(angle) * radius);
+        }
+        return output;
+    };
+
+    for (const auto& node : nodes) {
+        queue.push_back(node.get());
+    }
+    while (!queue.empty()) {
+        auto node = queue.front();
+        queue.pop_front();
+        // Add to output if needed
+        if (output.size() < node->layer()) {
+            output.resize(node->layer());
+        }
+        output[node->layer()].add(circle(node->position(), node->radius()));
+    }
+    return output;
+}
+
 ModelVolumes::ModelVolumes(const TreeParams& params, const SliceDataStorage& storage) :
     params_{params}, machine_border_{calculate_machine_border(storage, params)}
 {
@@ -1036,6 +1064,33 @@ auto TreeSupport::generateContactPoints(const SliceMeshStorage& mesh) const -> N
     return contact_points;
 }
 
+std::vector<Node*> TreeSupport::gatherNodes(int layer) const
+{
+    std::vector<Node*> output;
+    std::deque<Node*> queue;
+    std::transform(trees_.begin(), trees_.end(), std::back_inserter(queue), [](auto& t) { return t.get(); });
+
+    while (!queue.empty())
+    {
+        auto node = queue.back();
+        queue.pop_back();
+        if (node->layer() == layer)
+        {
+            output.push_back(node);
+        }
+        else if (node->layer() < layer)
+        {
+            std::transform(node->children().begin(), node->children().end(), std::back_inserter(queue),
+                           [](auto& n) { return n.get(); });
+        }
+        else
+        {
+            assert(false);
+            continue;
+        }
+    }
+    return output;
+}
 
 auto TreeSupport::groupNodes() -> std::vector<NodePtrVec::iterator>
 {
