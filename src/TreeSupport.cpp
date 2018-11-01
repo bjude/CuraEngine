@@ -1052,6 +1052,8 @@ void TreeSupport::processLayer() {
                 // If this movement would require moving too far than drop
                 if (vSize(new_pos - current_node->position()) > params_.max_move) {
                     current_node.reset();
+                } else {
+                    current_node->position(new_pos);
                 }
             }
         }
