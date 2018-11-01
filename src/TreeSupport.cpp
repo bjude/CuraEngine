@@ -973,6 +973,7 @@ void TreeSupport::generateSupportAreas(SliceDataStorage& storage)
     auto layer = model_contact.front()->layer();
     auto first = model_contact.begin();
     auto last = first;
+    const auto top_layer = layer;
     for (; layer != 0; --layer)
     {
         // Add any new contact nodes in this layer
@@ -985,6 +986,13 @@ void TreeSupport::generateSupportAreas(SliceDataStorage& storage)
         if (trees_.size() != 0) {
             processLayer();
             volumes_.dropLayersAbove(layer);
+        }
+
+#pragma omp critical (progress)
+        {
+            Progress::messageProgress(Progress::Stage::SUPPORT,
+                                      top_layer - layer,
+                                      top_layer);
         }
     }
     drawCircles(storage);
